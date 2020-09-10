@@ -28,14 +28,16 @@ import org.springframework.stereotype.Service;
  * @author nkorange
  * @since 1.0.0
  */
+
+//一致性service
 @Service("consistencyDelegate")
 public class DelegateConsistencyServiceImpl implements ConsistencyService {
 
     @Autowired
-    private PersistentConsistencyService persistentConsistencyService;
+    private PersistentConsistencyService persistentConsistencyService;//持久化的一致性service,RaftConsistencyServiceImpl
 
     @Autowired
-    private EphemeralConsistencyService ephemeralConsistencyService;
+    private EphemeralConsistencyService ephemeralConsistencyService;//非持久化的一致性service,DistroConsistencyServiceImpl
 
     @Override
     public void put(String key, Record value) throws NacosException {

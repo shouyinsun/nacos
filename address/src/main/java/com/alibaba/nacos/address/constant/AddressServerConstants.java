@@ -30,7 +30,7 @@ public interface AddressServerConstants {
     /**
      * the default server port when create the Instance object.
      */
-    int DEFAULT_SERVER_PORT = 8848;
+    int DEFAULT_SERVER_PORT = 8905;
 
     /**
      * when post ips is not given the product,then use the default.

@@ -38,6 +38,7 @@ import static com.alibaba.nacos.core.utils.SystemUtils.*;
  * @author nkorange
  * @since 1.0.0
  */
+//server list 相关管理
 @Component("serverListManager")
 public class ServerListManager {
 
@@ -54,6 +55,7 @@ public class ServerListManager {
 
     private Map<String, List<Server>> distroConfig = new ConcurrentHashMap<>();
 
+    //server.key (ip:port) ->  lastBeat
     private Map<String, Long> distroBeats = new ConcurrentHashMap<>(16);
 
     private Set<String> liveSites = new HashSet<>();
@@ -64,15 +66,18 @@ public class ServerListManager {
 
     private boolean autoDisabledHealthCheck = false;
 
+    //server status 同步器
     private Synchronizer synchronizer = new ServerStatusSynchronizer();
 
-    public void listen(ServerChangeListener listener) {
+    public void listen(ServerChangeListener listener) {//添加 listener
         listeners.add(listener);
     }
 
     @PostConstruct
     public void init() {
+        //nacos server list 更新
         GlobalExecutor.registerServerListUpdater(new ServerListUpdater());
+        //server status
         GlobalExecutor.registerServerStatusReporter(new ServerStatusReporter(), 2000);
     }
 
@@ -90,6 +95,7 @@ public class ServerListManager {
 
         List<String> serverList = new ArrayList<>();
         try {
+            // /nacos/conf/cluster.conf
             serverList = readClusterConf();
         } catch (Exception e) {
             Loggers.SRV_LOG.warn("failed to get config: " + CLUSTER_CONF_FILE_PATH, e);
@@ -149,13 +155,15 @@ public class ServerListManager {
         return healthyServers;
     }
 
-    private void notifyListeners() {
+    private void notifyListeners() {//通知 listener
 
         GlobalExecutor.notifyServerListChange(new Runnable() {
             @Override
             public void run() {
                 for (ServerChangeListener listener : listeners) {
+                    //serverList 变化
                     listener.onChangeServerList(servers);
+                    //可达(健康)的 serverList 变化
                     listener.onChangeHealthyServerList(healthyServers);
                 }
             }
@@ -170,12 +178,12 @@ public class ServerListManager {
 
         Loggers.SRV_LOG.info("receive config info: {}", configInfo);
 
-        String[] configs = configInfo.split("\r\n");
+        String[] configs = configInfo.split("\r\n");//spilt by "\r\n"
         if (configs.length == 0) {
             return;
         }
 
-        List<Server> newHealthyList = new ArrayList<>();
+        //List<Server> newHealthyList = new ArrayList<>();
         List<Server> tmpServerList = new ArrayList<>();
 
         for (String config : configs) {
@@ -192,6 +200,7 @@ public class ServerListManager {
             server.setSite(params[0]);
             server.setIp(params[1].split(UtilsAndCommons.IP_PORT_SPLITER)[0]);
             server.setServePort(Integer.parseInt(params[1].split(UtilsAndCommons.IP_PORT_SPLITER)[1]));
+            //设置lastReportTime
             server.setLastRefTime(Long.parseLong(params[2]));
 
             if (!contains(server.getKey())) {
@@ -201,8 +210,10 @@ public class ServerListManager {
             Long lastBeat = distroBeats.get(server.getKey());
             long now = System.currentTimeMillis();
             if (null != lastBeat) {
+                //alive 判断
                 server.setAlive(now - lastBeat < switchDomain.getDistroServerExpiredMillis());
             }
+            //beat set now
             distroBeats.put(server.getKey(), now);
 
             Date date = new Date(Long.parseLong(params[2]));
@@ -296,6 +307,7 @@ public class ServerListManager {
 
                 boolean changed = false;
 
+                //新增
                 List<Server> newServers = (List<Server>) CollectionUtils.subtract(refreshedServers, oldServers);
                 if (CollectionUtils.isNotEmpty(newServers)) {
                     servers.addAll(newServers);
@@ -303,6 +315,7 @@ public class ServerListManager {
                     Loggers.RAFT.info("server list is updated, new: {} servers: {}", newServers.size(), newServers);
                 }
 
+                //删除
                 List<Server> deadServers = (List<Server>) CollectionUtils.subtract(oldServers, refreshedServers);
                 if (CollectionUtils.isNotEmpty(deadServers)) {
                     servers.removeAll(deadServers);
@@ -310,7 +323,7 @@ public class ServerListManager {
                     Loggers.RAFT.info("server list is updated, dead: {}, servers: {}", deadServers.size(), deadServers);
                 }
 
-                if (changed) {
+                if (changed) {//触发监听
                     notifyListeners();
                 }
 
@@ -321,16 +334,18 @@ public class ServerListManager {
     }
 
 
-    private class ServerStatusReporter implements Runnable {
+    private class ServerStatusReporter implements Runnable {//server 状态上报
 
         @Override
         public void run() {
             try {
 
+                //server port
                 if (RunningConfig.getServerPort() <= 0) {
                     return;
                 }
 
+                //检查 server 心跳
                 checkDistroHeartbeat();
 
                 int weight = Runtime.getRuntime().availableProcessors() / 2;
@@ -339,9 +354,11 @@ public class ServerListManager {
                 }
 
                 long curTime = System.currentTimeMillis();
+                //site # ip # lastReportTime # weight
                 String status = LOCALHOST_SITE + "#" + NetUtils.localServer() + "#" + curTime + "#" + weight + "\r\n";
 
                 //send status to itself
+                //给自己发送status
                 onReceiveServerStatus(status);
 
                 List<Server> allServers = getServers();
@@ -353,6 +370,7 @@ public class ServerListManager {
 
                 if (allServers.size() > 0 && !NetUtils.localServer().contains(UtilsAndCommons.LOCAL_HOST_IP)) {
                     for (com.alibaba.nacos.naming.cluster.servers.Server server : allServers) {
+                        //ignore itself
                         if (server.getKey().equals(NetUtils.localServer())) {
                             continue;
                         }
@@ -360,6 +378,7 @@ public class ServerListManager {
                         Message msg = new Message();
                         msg.setData(status);
 
+                        // Report local server status to other server
                         synchronizer.send(server.getKey(), msg);
 
                     }
@@ -389,6 +408,7 @@ public class ServerListManager {
             if (null == lastBeat) {
                 continue;
             }
+            //判断alive 10s
             s.setAlive(now - lastBeat < switchDomain.getDistroServerExpiredMillis());
         }
 
@@ -429,7 +449,7 @@ public class ServerListManager {
             autoDisabledHealthCheck = false;
         }
 
-        if (!CollectionUtils.isEqualCollection(healthyServers, newHealthyList)) {
+        if (!CollectionUtils.isEqualCollection(healthyServers, newHealthyList)) {//可达的serverList 有变化
             // for every change disable healthy check for some while
             if (switchDomain.isHealthCheckEnabled()) {
                 Loggers.SRV_LOG.info("[NACOS-DISTRO] healthy server list changed, " +
@@ -443,6 +463,7 @@ public class ServerListManager {
             }
 
             healthyServers = newHealthyList;
+            //通知 listener
             notifyListeners();
         }
     }

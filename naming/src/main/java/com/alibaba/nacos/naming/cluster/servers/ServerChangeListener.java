@@ -30,6 +30,7 @@ public interface ServerChangeListener {
      *
      * @param servers servers after change
      */
+    //server list 变更通知
     void onChangeServerList(List<Server> servers);
 
     /**
@@ -37,5 +38,6 @@ public interface ServerChangeListener {
      *
      * @param healthyServer reachable servers after change
      */
+    //可达的 server list 变更通知
     void onChangeHealthyServerList(List<Server> healthyServer);
 }

@@ -52,7 +52,7 @@ public class DistroMapper implements ServerChangeListener {
      * init server list
      */
     @PostConstruct
-    public void init() {
+    public void init() {//serverListManager 加本身这个监听
         serverListManager.listen(this);
     }
 
@@ -63,7 +63,7 @@ public class DistroMapper implements ServerChangeListener {
             && cluster.contains(instance);
     }
 
-    public boolean responsible(String serviceName) {
+    public boolean responsible(String serviceName) {//当前server是否负责这个service
         if (!switchDomain.isDistroEnabled() || SystemUtils.STANDALONE_MODE) {
             return true;
         }
@@ -73,6 +73,7 @@ public class DistroMapper implements ServerChangeListener {
             return false;
         }
 
+        //每个server 只负责一部分的service
         int index = healthyList.indexOf(NetUtils.localServer());
         int lastIndex = healthyList.lastIndexOf(NetUtils.localServer());
         if (lastIndex < 0 || index < 0) {
@@ -83,7 +84,7 @@ public class DistroMapper implements ServerChangeListener {
         return target >= index && target <= lastIndex;
     }
 
-    public String mapSrv(String serviceName) {
+    public String mapSrv(String serviceName) {//看哪个server负责这个service
         if (CollectionUtils.isEmpty(healthyList) || !switchDomain.isDistroEnabled()) {
             return NetUtils.localServer();
         }

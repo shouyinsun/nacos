@@ -45,6 +45,7 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
  * @author xuanyin.zy
  */
 @Component
+//http 健康检查 统计RT
 public class HttpHealthCheckProcessor implements HealthCheckProcessor {
 
     public static final String TYPE = "HTTP";
@@ -61,6 +62,7 @@ public class HttpHealthCheckProcessor implements HealthCheckProcessor {
 
     static {
         try {
+            //异步 httpClient
             AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
 
             builder.setMaximumConnectionsTotal(-1);
@@ -68,7 +70,7 @@ public class HttpHealthCheckProcessor implements HealthCheckProcessor {
             builder.setAllowPoolingConnection(false);
             builder.setFollowRedirects(false);
             builder.setIdleConnectionTimeoutInMs(CONNECT_TIMEOUT_MS);
-            builder.setConnectionTimeoutInMs(CONNECT_TIMEOUT_MS);
+            builder.setConnectionTimeoutInMs(CONNECT_TIMEOUT_MS);//500ms 连接超时
             builder.setCompressionEnabled(false);
             builder.setIOThreadMultiplier(1);
             builder.setMaxRequestRetry(0);
@@ -158,7 +160,7 @@ public class HttpHealthCheckProcessor implements HealthCheckProcessor {
             ip.setCheckRT(System.currentTimeMillis() - startTime);
 
             int httpCode = response.getStatusCode();
-            if (HttpURLConnection.HTTP_OK == httpCode) {
+            if (HttpURLConnection.HTTP_OK == httpCode) {//200 成功
                 healthCheckCommon.checkOK(ip, task, "http:" + httpCode);
                 healthCheckCommon.reEvaluateCheckRT(System.currentTimeMillis() - startTime, task, switchDomain.getHttpHealthParams());
             } else if (HttpURLConnection.HTTP_UNAVAILABLE == httpCode || HttpURLConnection.HTTP_MOVED_TEMP == httpCode) {

@@ -47,6 +47,7 @@ import java.util.zip.GZIPOutputStream;
 /**
  * @author nacos
  */
+//udp push service 变更给client
 @Component
 public class PushService implements ApplicationContextAware, ApplicationListener<ServiceChangeEvent> {
 
@@ -113,6 +114,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
                 @Override
                 public void run() {
                     try {
+                        //移除僵尸client
                         removeClientIfZombie();
                     } catch (Throwable e) {
                         Loggers.PUSH.warn("[NACOS-PUSH] failed to remove client zombie");
@@ -136,6 +138,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
         String serviceName = service.getName();
         String namespaceId = service.getNamespaceId();
 
+        //udp线程 push
         Future future = udpSender.schedule(new Runnable() {
             @Override
             public void run() {
@@ -149,7 +152,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
                     Map<String, Object> cache = new HashMap<>(16);
                     long lastRefTime = System.nanoTime();
                     for (PushClient client : clients.values()) {
-                        if (client.zombie()) {
+                        if (client.zombie()) {//移除僵尸client
                             Loggers.PUSH.debug("client is zombie: " + client.toString());
                             clients.remove(client.toString());
                             Loggers.PUSH.debug("client is zombie: " + client.toString());
@@ -181,18 +184,21 @@ public class PushService implements ApplicationContextAware, ApplicationListener
                         Loggers.PUSH.info("serviceName: {} changed, schedule push for: {}, agent: {}, key: {}",
                             client.getServiceName(), client.getAddrStr(), client.getAgent(), (ackEntry == null ? null : ackEntry.key));
 
+                        //push
                         udpPush(ackEntry);
                     }
                 } catch (Exception e) {
                     Loggers.PUSH.error("[NACOS-PUSH] failed to push serviceName: {} to client, error: {}", serviceName, e);
 
                 } finally {
+                    //remove from futureMap
                     futureMap.remove(UtilsAndCommons.assembleFullServiceName(namespaceId, serviceName));
                 }
 
             }
         }, 1000, TimeUnit.MILLISECONDS);
 
+        //add to futureMap,合并减少频繁push
         futureMap.put(UtilsAndCommons.assembleFullServiceName(namespaceId, serviceName), future);
 
     }
@@ -286,7 +292,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
         String key = getACKKey(client.getSocketAddr().getAddress().getHostAddress(),
             client.getSocketAddr().getPort(),
             lastRefTime);
-        DatagramPacket packet = null;
+        DatagramPacket packet ;
         try {
             packet = new DatagramPacket(dataBytes, dataBytes.length, client.socketAddr);
             Receiver.AckEntry ackEntry = new Receiver.AckEntry(key, packet);
@@ -580,6 +586,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
 
             ackEntry.increaseRetryTime();
 
+            //延迟检查是否执行完,重试
             executorService.schedule(new Retransmitter(ackEntry), TimeUnit.NANOSECONDS.toMillis(ACK_TIMEOUT_NANOS),
                 TimeUnit.MILLISECONDS);
 
@@ -599,6 +606,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
         return StringUtils.strip(host) + "," + port + "," + lastRefTime;
     }
 
+    //重新发送线程
     public static class Retransmitter implements Runnable {
         Receiver.AckEntry ackEntry;
 

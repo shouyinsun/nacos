@@ -38,7 +38,7 @@ import java.io.IOException;
 @Service
 public class NacosMcpServer {
 
-    private final int port = 18848;
+    private final int port = 18905;
 
     private Server server;
 

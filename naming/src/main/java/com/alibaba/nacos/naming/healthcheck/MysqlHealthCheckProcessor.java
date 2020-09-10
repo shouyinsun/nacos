@@ -43,6 +43,7 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
  * @author nacos
  */
 @Component
+//mysql 健康检查
 public class MysqlHealthCheckProcessor implements HealthCheckProcessor {
 
     public static final String TYPE = "MYSQL";
@@ -166,11 +167,13 @@ public class MysqlHealthCheckProcessor implements HealthCheckProcessor {
                 statement = connection.createStatement();
                 statement.setQueryTimeout(1);
 
+                //执行sql命令
                 resultSet = statement.executeQuery(config.getCmd());
                 int resultColumnIndex = 2;
 
                 if (CHECK_MYSQL_MASTER_SQL.equals(config.getCmd())) {
                     resultSet.next();
+                    //从库
                     if (MYSQL_SLAVE_READONLY.equals(resultSet.getString(resultColumnIndex))) {
                         throw new IllegalStateException("current node is slave!");
                     }
@@ -178,13 +181,14 @@ public class MysqlHealthCheckProcessor implements HealthCheckProcessor {
 
                 healthCheckCommon.checkOK(ip, task, "mysql:+ok");
                 healthCheckCommon.reEvaluateCheckRT(System.currentTimeMillis() - startTime, task, switchDomain.getMysqlHealthParams());
-            } catch (SQLException e) {
+            } catch (SQLException e) {//sql exception
                 // fail immediately
                 healthCheckCommon.checkFailNow(ip, task, "mysql:" + e.getMessage());
                 healthCheckCommon.reEvaluateCheckRT(switchDomain.getHttpHealthParams().getMax(), task, switchDomain.getMysqlHealthParams());
             } catch (Throwable t) {
                 Throwable cause = t;
                 int maxStackDepth = 50;
+                //防止错误堆栈过深
                 for (int deepth = 0; deepth < maxStackDepth && cause != null; deepth++) {
                     if (cause instanceof SocketTimeoutException
                             || cause instanceof ConnectTimeoutException

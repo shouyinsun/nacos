@@ -69,9 +69,9 @@ public class RaftController {
     private RaftCore raftCore;
 
     @NeedAuth
-    @PostMapping("/vote")
+    @PostMapping("/vote")//接收投票信息
     public JSONObject vote(HttpServletRequest request, HttpServletResponse response) throws Exception {
-
+        //vote -> RaftPeer
         RaftPeer peer = raftCore.receivedVote(
             JSON.parseObject(WebUtils.required(request, "vote"), RaftPeer.class));
 
@@ -79,13 +79,19 @@ public class RaftController {
     }
 
     @NeedAuth
-    @PostMapping("/beat")
+    @PostMapping("/beat")//接收心跳信息
     public JSONObject beat(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
+        //解压
         String entity = new String(IoUtils.tryDecompress(request.getInputStream()), StandardCharsets.UTF_8);
         String value = URLDecoder.decode(entity, "UTF-8");
         value = URLDecoder.decode(value, "UTF-8");
-
+        /*
+          beat:{
+            "peer":""
+            "datums":[]
+          }
+        */
         JSONObject json = JSON.parseObject(value);
         JSONObject beat = JSON.parseObject(json.getString("beat"));
 
@@ -123,7 +129,7 @@ public class RaftController {
     }
 
     @NeedAuth
-    @PostMapping("/datum")
+    @PostMapping("/datum")//发布内容 post
     public String publish(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         response.setHeader("Content-Type", "application/json; charset=" + getAcceptEncoding(request));
@@ -135,17 +141,17 @@ public class RaftController {
         JSONObject json = JSON.parseObject(value);
 
         String key = json.getString("key");
-        if (KeyBuilder.matchInstanceListKey(key)) {
+        if (KeyBuilder.matchInstanceListKey(key)) {//instance 信息
             raftConsistencyService.put(key, JSON.parseObject(json.getString("value"), Instances.class));
             return "ok";
         }
 
-        if (KeyBuilder.matchSwitchKey(key)) {
+        if (KeyBuilder.matchSwitchKey(key)) {//switch domain 信息
             raftConsistencyService.put(key, JSON.parseObject(json.getString("value"), SwitchDomain.class));
             return "ok";
         }
 
-        if (KeyBuilder.matchServiceMetaKey(key)) {
+        if (KeyBuilder.matchServiceMetaKey(key)) {//meta service 信息
             raftConsistencyService.put(key, JSON.parseObject(json.getString("value"), Service.class));
             return "ok";
         }
@@ -200,6 +206,7 @@ public class RaftController {
 
     @NeedAuth
     @PostMapping("/datum/commit")
+    //commit
     public String onPublish(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         response.setHeader("Content-Type", "application/json; charset=" + getAcceptEncoding(request));
@@ -211,17 +218,18 @@ public class RaftController {
         JSONObject jsonObject = JSON.parseObject(value);
         String key = "key";
 
+        //
         RaftPeer source = JSON.parseObject(jsonObject.getString("source"), RaftPeer.class);
         JSONObject datumJson = jsonObject.getJSONObject("datum");
 
         Datum datum = null;
-        if (KeyBuilder.matchInstanceListKey(datumJson.getString(key))) {
+        if (KeyBuilder.matchInstanceListKey(datumJson.getString(key))) {//instance
             datum = JSON.parseObject(jsonObject.getString("datum"), new TypeReference<Datum<Instances>>() {
             });
-        } else if (KeyBuilder.matchSwitchKey(datumJson.getString(key))) {
+        } else if (KeyBuilder.matchSwitchKey(datumJson.getString(key))) {//switchDomain
             datum = JSON.parseObject(jsonObject.getString("datum"), new TypeReference<Datum<SwitchDomain>>() {
             });
-        } else if (KeyBuilder.matchServiceMetaKey(datumJson.getString(key))) {
+        } else if (KeyBuilder.matchServiceMetaKey(datumJson.getString(key))) {//service
             datum = JSON.parseObject(jsonObject.getString("datum"), new TypeReference<Datum<Service>>() {
             });
         }

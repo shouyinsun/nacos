@@ -44,6 +44,7 @@ public class PushReceiver implements Runnable {
     public PushReceiver(HostReactor hostReactor) {
         try {
             this.hostReactor = hostReactor;
+            //启一个 udp
             udpSocket = new DatagramSocket();
 
             executorService = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
@@ -70,6 +71,7 @@ public class PushReceiver implements Runnable {
                 byte[] buffer = new byte[UDP_MSS];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
+                //udp socket 接收消息
                 udpSocket.receive(packet);
 
                 String json = new String(IoUtils.tryDecompress(packet.getData()), "UTF-8").trim();

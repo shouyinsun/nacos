@@ -40,6 +40,7 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
  *
  * @author nacos
  */
+//tcp 健康检查,统计RT
 @Component
 public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
 
@@ -98,6 +99,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
         try {
             selector = Selector.open();
 
+            //schedule 线程 submit itself
             TCP_CHECK_EXECUTOR.submit(this);
 
         } catch (Exception e) {
@@ -134,6 +136,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
             }
 
             Beat beat = new Beat(ip, task);
+            //beat任务 加到任务队列
             taskQueue.add(beat);
             MetricsMonitor.getTcpHealthCheckMonitor().incrementAndGet();
         }
@@ -148,15 +151,17 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
             }
 
             tasks.add(new TaskProcessor(beat));
+        //beat任务队列为空或者批任务数量够多
         } while (taskQueue.size() > 0 && tasks.size() < NIO_THREAD_COUNT * 64);
 
+        //nio 线程池执行 TaskProcessor
         for (Future<?> f : NIO_EXECUTOR.invokeAll(tasks)) {
             f.get();
         }
     }
 
     @Override
-    public void run() {
+    public void run() {//TcpSuperSenseProcessor run
         while (true) {
             try {
                 processTask();
@@ -171,6 +176,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
                     SelectionKey key = iter.next();
                     iter.remove();
 
+                    //后处理任务
                     NIO_EXECUTOR.execute(new PostProcessor(key));
                 }
             } catch (Throwable e) {
@@ -179,7 +185,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
         }
     }
 
-    public class PostProcessor implements Runnable {
+    public class PostProcessor implements Runnable {//后处理任务
         SelectionKey key;
 
         public PostProcessor(SelectionKey key) {
@@ -200,7 +206,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
                     return;
                 }
 
-                if (key.isValid() && key.isConnectable()) {
+                if (key.isValid() && key.isConnectable()) {//socket连接成功
                     //connected
                     channel.finishConnect();
                     beat.finishCheck(true, false, System.currentTimeMillis() - beat.getTask().getStartTime(), "tcp:ok+");
@@ -321,7 +327,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
         }
     }
 
-    private static class TimeOutTask implements Runnable {
+    private static class TimeOutTask implements Runnable {//连接超时处理
         SelectionKey key;
 
         public TimeOutTask(SelectionKey key) {
@@ -353,7 +359,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
         }
     }
 
-    private class TaskProcessor implements Callable<Void> {
+    private class TaskProcessor implements Callable<Void> {//task Processor
 
         private static final int MAX_WAIT_TIME_MILLISECONDS = 500;
         Beat beat;
@@ -386,14 +392,22 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
                 }
 
                 channel = SocketChannel.open();
+                //非阻塞
                 channel.configureBlocking(false);
                 // only by setting this can we make the socket close event asynchronous
+                //启用/禁用具有指定逗留时间
+                //socket close 时一般是立即关闭,如果还有未发送的包,可以设置逗留时间,阻塞这么长时间再关闭
                 channel.socket().setSoLinger(false, -1);
                 channel.socket().setReuseAddress(true);
                 channel.socket().setKeepAlive(true);
+                //nagle算法,默认开启,要求一个TCP连接上最多只能有一个未被确认的小分组,在该小分组的确认到来之前,不能发送其他小分组
+                //setTcpNoDelay
+                // false 启用nagle算法
+                // true  体用nagle算法
                 channel.socket().setTcpNoDelay(true);
 
                 int port = cluster.isUseIPPort4Check() ? instance.getPort() : cluster.getDefCkport();
+                //connect 连接
                 channel.connect(new InetSocketAddress(instance.getIp(), port));
 
                 SelectionKey key
@@ -403,6 +417,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
 
                 beat.setStartTime(System.currentTimeMillis());
 
+                //500ms 连接超时处理
                 NIO_EXECUTOR.schedule(new TimeOutTask(key),
                     CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             } catch (Exception e) {

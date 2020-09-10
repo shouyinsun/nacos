@@ -440,6 +440,7 @@ public class ServiceManager implements RecordListener<Service> {
             service.setGroupName(NamingUtils.getGroupName(serviceName));
             // now validate the service. if failed, exception will be thrown
             service.setLastModifiedMillis(System.currentTimeMillis());
+            //重新计算checkSum
             service.recalculateChecksum();
             if (cluster != null) {
                 cluster.setService(service);
@@ -475,6 +476,7 @@ public class ServiceManager implements RecordListener<Service> {
                 "service not found, namespace: " + namespaceId + ", service: " + serviceName);
         }
 
+        //添加 service 实例
         addInstance(namespaceId, serviceName, instance.isEphemeral(), instance);
     }
 
@@ -501,6 +503,7 @@ public class ServiceManager implements RecordListener<Service> {
         Service service = getService(namespaceId, serviceName);
 
         synchronized (service) {
+            //addIpAddresses
             List<Instance> instanceList = addIpAddresses(service, ephemeral, ips);
 
             Instances instances = new Instances();

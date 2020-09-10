@@ -23,6 +23,7 @@ import java.util.concurrent.*;
 /**
  * @author nacos
  */
+//健康检查线程池
 public class HealthCheckReactor {
 
     private static final ScheduledExecutorService EXECUTOR;
@@ -45,11 +46,13 @@ public class HealthCheckReactor {
                 });
     }
 
+    //添加健康检查任务
     public static ScheduledFuture<?> scheduleCheck(HealthCheckTask task) {
         task.setStartTime(System.currentTimeMillis());
         return EXECUTOR.schedule(task, task.getCheckRTNormalized(), TimeUnit.MILLISECONDS);
     }
 
+    //临时节点检查、更新状态 (心跳超时处理)
     public static void scheduleCheck(ClientBeatCheckTask task) {
         futureMap.putIfAbsent(task.taskKey(), EXECUTOR.scheduleWithFixedDelay(task, 5000, 5000, TimeUnit.MILLISECONDS));
     }

@@ -40,7 +40,7 @@ public class NamingProxy {
 
     private static final String TIMESTAMP_SYNC_URL = "/distro/checksum";
 
-    public static void syncCheckSums(Map<String, String> checksumMap, String server) {
+    public static void syncCheckSums(Map<String, String> checksumMap, String server) {//同步checkSums
 
         try {
             Map<String, String> headers = new HashMap<>(128);
@@ -49,6 +49,7 @@ public class NamingProxy {
             headers.put(HttpHeaderConsts.USER_AGENT_HEADER, UtilsAndCommons.SERVER_VERSION);
             headers.put("Connection", "Keep-Alive");
 
+            // put /distro/checksum
             HttpClient.asyncHttpPutLarge("http://" + server + RunningConfig.getContextPath()
                     + UtilsAndCommons.NACOS_NAMING_CONTEXT + TIMESTAMP_SYNC_URL + "?source=" + NetUtils.localServer(),
                 headers, JSON.toJSONBytes(checksumMap),
@@ -76,10 +77,11 @@ public class NamingProxy {
         }
     }
 
-    public static byte[] getData(List<String> keys, String server) throws Exception {
+    public static byte[] getData(List<String> keys, String server) throws Exception {//获取server 对应keys的数据
 
         Map<String, String> params = new HashMap<>(8);
         params.put("keys", StringUtils.join(keys, ","));
+        // get  /distro/datum
         HttpClient.HttpResult result = HttpClient.httpGetLarge("http://" + server + RunningConfig.getContextPath()
             + UtilsAndCommons.NACOS_NAMING_CONTEXT + DATA_GET_URL, new HashMap<>(8), JSON.toJSONString(params));
 
@@ -93,9 +95,10 @@ public class NamingProxy {
             + result.code + " msg: " + result.content);
     }
 
-    public static byte[] getAllData(String server) throws Exception {
+    public static byte[] getAllData(String server) throws Exception {//获取server上所有的datum
 
         Map<String, String> params = new HashMap<>(8);
+        // get /distro/datums
         HttpClient.HttpResult result = HttpClient.httpGet("http://" + server + RunningConfig.getContextPath()
             + UtilsAndCommons.NACOS_NAMING_CONTEXT + ALL_DATA_GET_URL, new ArrayList<>(), params);
 
@@ -110,9 +113,9 @@ public class NamingProxy {
     }
 
 
-    public static boolean syncData(byte[] data, String curServer) {
+    public static boolean syncData(byte[] data, String curServer) {//向server 同步数据
         Map<String, String> headers = new HashMap<>(128);
-        
+
         headers.put(HttpHeaderConsts.CLIENT_VERSION_HEADER, VersionUtils.VERSION);
         headers.put(HttpHeaderConsts.USER_AGENT_HEADER, UtilsAndCommons.SERVER_VERSION);
         headers.put("Accept-Encoding", "gzip,deflate,sdch");
@@ -120,6 +123,7 @@ public class NamingProxy {
         headers.put("Content-Encoding", "gzip");
 
         try {
+            // put  /distro/datum
             HttpClient.HttpResult result = HttpClient.httpPutLarge("http://" + curServer + RunningConfig.getContextPath()
                 + UtilsAndCommons.NACOS_NAMING_CONTEXT + DATA_ON_SYNC_URL, headers, data);
             if (HttpURLConnection.HTTP_OK == result.code) {

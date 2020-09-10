@@ -37,7 +37,7 @@ public class NamingTest {
     public void testServiceList() throws Exception {
 
         Properties properties = new Properties();
-        properties.put(PropertyKeyConst.SERVER_ADDR, "11.160.165.126:8848");
+        properties.put(PropertyKeyConst.SERVER_ADDR, "11.160.165.126:8905");
         properties.put(PropertyKeyConst.NAMESPACE, "t1");
 
         NamingService namingService = NacosFactory.createNamingService(properties);

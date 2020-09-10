@@ -29,6 +29,7 @@ import java.util.Map;
  *
  * @author nacos
  */
+//server 状态同步器
 public class ServerStatusSynchronizer implements Synchronizer {
     @Override
     public void send(final String serverIP, Message msg) {
@@ -40,6 +41,7 @@ public class ServerStatusSynchronizer implements Synchronizer {
 
         params.put("serverStatus", msg.getData());
 
+        // /operator/server/status
         String url = "http://" + serverIP + ":" + RunningConfig.getServerPort()
             + RunningConfig.getContextPath() + UtilsAndCommons.NACOS_NAMING_CONTEXT + "/operator/server/status";
 

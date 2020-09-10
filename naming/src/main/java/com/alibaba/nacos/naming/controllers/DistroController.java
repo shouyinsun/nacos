@@ -83,6 +83,7 @@ public class DistroController {
     }
 
     @PutMapping("/checksum")
+    //更新checkSum
     public ResponseEntity syncChecksum(@RequestParam String source, @RequestBody Map<String, String> dataMap) {
 
         consistencyService.onReceiveChecksums(dataMap, source);

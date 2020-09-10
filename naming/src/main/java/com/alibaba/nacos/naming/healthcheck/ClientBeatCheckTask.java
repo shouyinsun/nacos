@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author nkorange
  */
-public class ClientBeatCheckTask implements Runnable {
+public class ClientBeatCheckTask implements Runnable {//客户端心跳检查
 
     private Service service;
 
@@ -75,13 +75,15 @@ public class ClientBeatCheckTask implements Runnable {
 
             // first set health status of instances:
             for (Instance instance : instances) {
+                //心跳超时,心跳上报默认5s,心跳超时默认15s,错过3次心跳
                 if (System.currentTimeMillis() - instance.getLastBeat() > instance.getInstanceHeartBeatTimeOut()) {
-                    if (!instance.isMarked()) {
-                        if (instance.isHealthy()) {
+                    if (!instance.isMarked()) {//没有被标记
+                        if (instance.isHealthy()) {//健康 -> 非健康
                             instance.setHealthy(false);
                             Loggers.EVT_LOG.info("{POS} {IP-DISABLED} valid: {}:{}@{}@{}, region: {}, msg: client timeout after {}, last beat: {}",
                                 instance.getIp(), instance.getPort(), instance.getClusterName(), service.getName(),
                                 UtilsAndCommons.LOCALHOST_SITE, instance.getInstanceHeartBeatTimeOut(), instance.getLastBeat());
+                            //push
                             getPushService().serviceChanged(service);
                             SpringContext.getAppContext().publishEvent(new InstanceHeartbeatTimeoutEvent(this, instance));
                         }
@@ -100,6 +102,7 @@ public class ClientBeatCheckTask implements Runnable {
                     continue;
                 }
 
+                //ip 删除
                 if (System.currentTimeMillis() - instance.getLastBeat() > instance.getIpDeleteTimeout()) {
                     // delete instance
                     Loggers.SRV_LOG.info("[AUTO-DELETE-IP] service: {}, ip: {}", service.getName(), JSON.toJSONString(instance));
@@ -114,7 +117,7 @@ public class ClientBeatCheckTask implements Runnable {
     }
 
 
-    private void deleteIP(Instance instance) {
+    private void deleteIP(Instance instance) {//删除ip实例
 
         try {
             NamingProxy.Request request = NamingProxy.Request.newRequest();

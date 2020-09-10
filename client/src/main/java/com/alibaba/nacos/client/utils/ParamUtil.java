@@ -51,7 +51,7 @@ public class ParamUtil {
 
         appName = AppNameUtils.getAppName();
 
-        String defaultServerPortTmp = "8848";
+        String defaultServerPortTmp = "8905";
 
         defaultServerPort = System.getProperty("nacos.server.port", defaultServerPortTmp);
         LOGGER.info("[settings] [req-serv] nacos-server port:{}", defaultServerPort);

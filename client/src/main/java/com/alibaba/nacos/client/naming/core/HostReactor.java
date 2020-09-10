@@ -86,6 +86,7 @@ public class HostReactor {
 
         this.updatingMap = new ConcurrentHashMap<String, Object>();
         this.failoverReactor = new FailoverReactor(this, cacheDir);
+        //push 消息 接收
         this.pushReceiver = new PushReceiver(this);
     }
 

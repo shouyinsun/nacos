@@ -63,7 +63,7 @@ public class NacosDefaultPropertySourceEnvironmentPostProcessorTest {
     public void testDefaultProperties() {
 
         // Web Server
-        assertPropertyEquals("server.port", "8848");
+        assertPropertyEquals("server.port", "8905");
         assertPropertyEquals("server.tomcat.uri-encoding", "UTF-8");
 
         // HTTP Encoding

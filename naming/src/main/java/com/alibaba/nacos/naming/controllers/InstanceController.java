@@ -92,7 +92,7 @@ public class InstanceController {
 
     @CanDistro
     @PostMapping
-    public String register(HttpServletRequest request) throws Exception {
+    public String register(HttpServletRequest request) throws Exception {//服务注册
 
         String serviceName = WebUtils.required(request, CommonParams.SERVICE_NAME);
         String namespaceId = WebUtils.optional(request, CommonParams.NAMESPACE_ID, Constants.DEFAULT_NAMESPACE_ID);
@@ -103,7 +103,7 @@ public class InstanceController {
 
     @CanDistro
     @DeleteMapping
-    public String deregister(HttpServletRequest request) throws Exception {
+    public String deregister(HttpServletRequest request) throws Exception {//取消注册,删除实例
         Instance instance = getIPAddress(request);
         String namespaceId = WebUtils.optional(request, CommonParams.NAMESPACE_ID,
             Constants.DEFAULT_NAMESPACE_ID);
@@ -207,10 +207,11 @@ public class InstanceController {
 
     @CanDistro
     @PutMapping("/beat")
-    public JSONObject beat(HttpServletRequest request) throws Exception {
+    public JSONObject beat(HttpServletRequest request) throws Exception {//客户端心跳
 
         JSONObject result = new JSONObject();
 
+        //返回配置的客户端心跳间隔
         result.put("clientBeatInterval", switchDomain.getClientBeatInterval());
         String serviceName = WebUtils.required(request, CommonParams.SERVICE_NAME);
         String namespaceId = WebUtils.optional(request, CommonParams.NAMESPACE_ID,
@@ -232,6 +233,7 @@ public class InstanceController {
             Loggers.SRV_LOG.debug("[CLIENT-BEAT] full arguments: beat: {}, serviceName: {}", clientBeat, serviceName);
         }
 
+        //创建service instance
         Instance instance = serviceManager.getInstance(namespaceId, serviceName, clientBeat.getCluster(),
             clientBeat.getIp(),
             clientBeat.getPort());
@@ -257,6 +259,7 @@ public class InstanceController {
                 "service not found: " + serviceName + "@" + namespaceId);
         }
 
+        //客户端心跳
         service.processClientBeat(clientBeat);
         result.put("clientBeatInterval", instance.getInstanceHeartBeatInterval());
         return result;
@@ -336,6 +339,7 @@ public class InstanceController {
             enabled = BooleanUtils.toBoolean(enabledString);
         }
 
+        //默认 ephemeral 临时节点
         boolean ephemeral = BooleanUtils.toBoolean(WebUtils.optional(request, "ephemeral",
             String.valueOf(switchDomain.isDefaultInstanceEphemeral())));
 

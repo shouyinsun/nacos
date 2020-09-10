@@ -223,9 +223,9 @@ public class ClientWorker {
             group = Constants.DEFAULT_GROUP;
         }
 
-        HttpResult result = null;
+        HttpResult result  ;
         try {
-            List<String> params = null;
+            List<String> params ;
             if (StringUtils.isBlank(tenant)) {
                 params = Arrays.asList("dataId", dataId, "group", group);
             } else {

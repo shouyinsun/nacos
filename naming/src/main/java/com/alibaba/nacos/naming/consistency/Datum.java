@@ -28,5 +28,6 @@ public class Datum<T extends Record> {
 
     public T value;
 
+    //atomicLog
     public AtomicLong timestamp = new AtomicLong(0L);
 }

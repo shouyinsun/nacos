@@ -63,7 +63,7 @@
 * [#497] Make subscription of service triggered by getInstance method optional
 * [#498] Support namespace for service discovery
 * [#499] When the configuration is newly created (if data-id and group already exist), the original configuration will be overwritten
-* [#512] nacos-logs start.out always print 8848 (but port can be changed)
+* [#512] nacos-logs start.out always print 8905 (but port can be changed)
 * [#514] Nacos 0.7 not support namespace
 * [#523] Add a switch to control server detection and client reporting heartbeat switching
 * [#526] Possible data loss in server side health check mode

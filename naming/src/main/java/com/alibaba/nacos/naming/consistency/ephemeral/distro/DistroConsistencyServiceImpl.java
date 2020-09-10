@@ -138,6 +138,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
                 Loggers.DISTRO.debug("sync from " + server);
             }
             // try sync data from remote server:
+            // 从其他server拉取所有数据
             if (syncAllDataFromRemote(server)) {
                 initialized = true;
                 return;
@@ -205,6 +206,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
             List<String> toUpdateKeys = new ArrayList<>();
             List<String> toRemoveKeys = new ArrayList<>();
             for (Map.Entry<String, String> entry : checksumMap.entrySet()) {
+                //这个service由我负责
                 if (distroMapper.responsible(KeyBuilder.getServiceName(entry.getKey()))) {
                     // this key should not be sent from remote server:
                     Loggers.DISTRO.error("receive responsible key timestamp of " + entry.getKey() + " from " + server);
@@ -215,6 +217,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
                 if (!dataStore.contains(entry.getKey()) ||
                     dataStore.get(entry.getKey()).value == null ||
                     !dataStore.get(entry.getKey()).value.getChecksum().equals(entry.getValue())) {
+                    //update 的 key
                     toUpdateKeys.add(entry.getKey());
                 }
             }
@@ -243,6 +246,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
             }
 
             try {
+                //同步 updateKeys
                 byte[] result = NamingProxy.getData(toUpdateKeys, server);
                 processData(result);
             } catch (Exception e) {
@@ -274,6 +278,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
 
 
             for (Map.Entry<String, Datum<Instances>> entry : datumMap.entrySet()) {
+                //put into dataStore
                 dataStore.put(entry.getKey(), entry.getValue());
 
                 if (!listeners.containsKey(entry.getKey())) {

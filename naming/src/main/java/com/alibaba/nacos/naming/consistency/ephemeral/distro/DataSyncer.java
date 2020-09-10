@@ -101,6 +101,7 @@ public class DataSyncer {
                 Loggers.SRV_LOG.debug("try to sync data for this keys {}.", keys);
             }
             // 2. get the datums by keys and check the datum is empty or not
+            // 获得本机的keys的值
             Map<String, Datum> datumMap = dataStore.batchGet(keys);
             if (datumMap == null || datumMap.isEmpty()) {
                 // clear all flags of this task:
@@ -113,6 +114,7 @@ public class DataSyncer {
             byte[] data = serializer.serialize(datumMap);
 
             long timestamp = System.currentTimeMillis();
+            //给其他server同步数据
             boolean success = NamingProxy.syncData(data, task.getTargetServer());
             if (!success) {
                 SyncTask syncTask = new SyncTask();
@@ -139,7 +141,7 @@ public class DataSyncer {
             // if server is no longer in healthy server list, ignore this task:
             //fix #1665 remove existing tasks
             if (syncTask.getKeys() != null) {
-                for (String key : syncTask.getKeys()) {
+                for (String key : syncTask.getKeys()) {//移除正在处理map,提交重试
                     taskMap.remove(buildKey(key, syncTask.getTargetServer()));
                 }
             }
@@ -168,6 +170,7 @@ public class DataSyncer {
                 // send local timestamps to other servers:
                 Map<String, String> keyChecksums = new HashMap<>(64);
                 for (String key : dataStore.keys()) {
+                    //只同步自己负责的
                     if (!distroMapper.responsible(KeyBuilder.getServiceName(key))) {
                         continue;
                     }
@@ -191,6 +194,7 @@ public class DataSyncer {
                     if (NetUtils.localServer().equals(member.getKey())) {
                         continue;
                     }
+                    //同步checksums
                     NamingProxy.syncCheckSums(keyChecksums, member.getKey());
                 }
             } catch (Exception e) {

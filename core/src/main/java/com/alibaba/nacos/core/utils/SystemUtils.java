@@ -70,6 +70,7 @@ public class SystemUtils {
     /**
      * The home of nacos.
      */
+    //NACOS_HOME 默认 ${user.home}/nacos
     public static final String NACOS_HOME = getNacosHome();
 
     /**
@@ -132,7 +133,7 @@ public class SystemUtils {
                     continue;
                 }
                 if (instance.contains(comment)) {
-                    // 192.168.71.52:8848 # Instance A
+                    // 192.168.71.52:8905 # Instance A
                     instance = instance.substring(0, instance.indexOf(comment));
                     instance = instance.trim();
                 }
@@ -141,7 +142,7 @@ public class SystemUtils {
                     // support the format: ip1:port,ip2:port  # multi inline
                     instanceList.addAll(Arrays.asList(instance.split(Constants.COMMA_DIVISION)));
                 } else {
-                    //support the format: 192.168.71.52:8848
+                    //support the format: 192.168.71.52:8905
                     instanceList.add(instance);
                 }
             }

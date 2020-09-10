@@ -30,8 +30,10 @@ public class KeyBuilder {
 
     private static final String EPHEMERAL_KEY_PREFIX = "ephemeral.";
 
+    //meta 元key com.alibaba.nacos.naming.domains.meta.
     public static final String SERVICE_META_KEY_PREFIX = "com.alibaba.nacos.naming.domains.meta.";
 
+    //实例list key com.alibaba.nacos.naming.iplist.
     public static final String INSTANCE_LIST_KEY_PREFIX = "com.alibaba.nacos.naming.iplist.";
 
     public static final String BRIEF_SERVICE_META_KEY_PREFIX = "meta.";
@@ -39,11 +41,13 @@ public class KeyBuilder {
     public static final String BRIEF_INSTANCE_LIST_KEY_PREFIX = "iplist.";
 
     private static String buildEphemeralInstanceListKey(String namespaceId, String serviceName) {
+        //com.alibaba.nacos.naming.iplist.ephemeral.
         return INSTANCE_LIST_KEY_PREFIX + EPHEMERAL_KEY_PREFIX + namespaceId + NAMESPACE_KEY_CONNECTOR
             + serviceName;
     }
 
     private static String buildPersistentInstanceListKey(String namespaceId, String serviceName) {
+        //com.alibaba.nacos.naming.iplist.
         return INSTANCE_LIST_KEY_PREFIX + namespaceId + NAMESPACE_KEY_CONNECTOR
             + serviceName;
     }
@@ -95,6 +99,7 @@ public class KeyBuilder {
     }
 
     public static boolean matchPersistentKey(String key) {
+        //临时节点 com.alibaba.nacos.naming.iplist.ephemeral.
         return !matchEphemeralKey(key);
     }
 

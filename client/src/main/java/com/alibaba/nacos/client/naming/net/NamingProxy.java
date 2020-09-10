@@ -53,7 +53,7 @@ import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
  */
 public class NamingProxy {
 
-    private static final int DEFAULT_SERVER_PORT = 8848;
+    private static final int DEFAULT_SERVER_PORT = 8905;
 
     private int serverPort = DEFAULT_SERVER_PORT;
 
@@ -84,6 +84,7 @@ public class NamingProxy {
             }
         }
 
+        //定时从endpoint获取刷新serverList
         initRefreshSrvIfNeed();
     }
 
@@ -115,6 +116,7 @@ public class NamingProxy {
     public List<String> getServerListFromEndpoint() {
 
         try {
+            //endPoint
             String urlString = "http://" + endpoint + "/nacos/serverlist";
             List<String> headers = builderHeaders();
 
@@ -188,6 +190,8 @@ public class NamingProxy {
         params.put("ephemeral", String.valueOf(instance.isEphemeral()));
         params.put("metadata", JSON.toJSONString(instance.getMetadata()));
 
+
+        // nacos/instance
         reqAPI(UtilAndComs.NACOS_URL_INSTANCE, params, HttpMethod.POST);
 
     }
@@ -309,6 +313,7 @@ public class NamingProxy {
             params.put("beat", JSON.toJSONString(beatInfo));
             params.put(CommonParams.NAMESPACE_ID, namespaceId);
             params.put(CommonParams.SERVICE_NAME, beatInfo.getServiceName());
+            //put 请求  /instance/beat
             String result = reqAPI(UtilAndComs.NACOS_URL_BASE + "/instance/beat", params, HttpMethod.PUT);
             JSONObject jsonObject = JSON.parseObject(result);
 
@@ -446,9 +451,10 @@ public class NamingProxy {
         if (servers != null && !servers.isEmpty()) {
 
             Random random = new Random(System.currentTimeMillis());
+            //随机挑一个
             int index = random.nextInt(servers.size());
 
-            for (int i = 0; i < servers.size(); i++) {
+            for (int i = 0; i < servers.size(); i++) {//失败重试
                 String server = servers.get(index);
                 try {
                     return callServer(api, params, server, method);
@@ -562,6 +568,6 @@ public class NamingProxy {
             this.serverPort = Integer.parseInt(sp);
         }
     }
-    
+
 }
 

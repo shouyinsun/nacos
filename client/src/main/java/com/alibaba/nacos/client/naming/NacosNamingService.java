@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("PMD.ServiceOrDaoClassShouldEndWithImplRule")
 public class NacosNamingService implements NamingService {
     private static final String DEFAULT_PORT = "8080";
+    //默认心跳间隔 5s
     private static final long DEFAULT_HEART_BEAT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
 
     /**
@@ -85,16 +86,25 @@ public class NacosNamingService implements NamingService {
     }
 
     private void init(Properties properties) {
+        //namespace
         namespace = InitUtils.initNamespaceForNaming(properties);
+        //serverList and endpoint
         initServerAddr(properties);
+        //context path
         InitUtils.initWebRootContext();
+        //cache dir
         initCacheDir();
+        //log file name
         initLogName(properties);
 
+        //事件分发器
         eventDispatcher = new EventDispatcher();
+        //server proxy
         serverProxy = new NamingProxy(namespace, endpoint, serverList);
         serverProxy.setProperties(properties);
+        //heart beat
         beatReactor = new BeatReactor(serverProxy, initClientBeatThreadCount(properties));
+        //host
         hostReactor = new HostReactor(eventDispatcher, serverProxy, cacheDir, isLoadCacheAtStart(properties), initPollingThreadCount(properties));
     }
 
@@ -189,7 +199,7 @@ public class NacosNamingService implements NamingService {
     @Override
     public void registerInstance(String serviceName, String groupName, Instance instance) throws NacosException {
 
-        if (instance.isEphemeral()) {
+        if (instance.isEphemeral()) {//临时节点
             BeatInfo beatInfo = new BeatInfo();
             beatInfo.setServiceName(NamingUtils.getGroupedName(serviceName, groupName));
             beatInfo.setIp(instance.getIp());
@@ -199,8 +209,10 @@ public class NacosNamingService implements NamingService {
             beatInfo.setMetadata(instance.getMetadata());
             beatInfo.setScheduled(false);
             long instanceInterval = instance.getInstanceHeartBeatInterval();
+            //default 5s
             beatInfo.setPeriod(instanceInterval == 0 ? DEFAULT_HEART_BEAT_INTERVAL : instanceInterval);
 
+            //临时节点 需要向注册server发送心跳
             beatReactor.addBeatInfo(NamingUtils.getGroupedName(serviceName, groupName), beatInfo);
         }
 

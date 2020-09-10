@@ -53,23 +53,27 @@ public class RaftStore {
 
     private String metaFileName = UtilsAndCommons.DATA_BASE_DIR + File.separator + "meta.properties";
 
+    //cache 缓存目录  NACOS_HOME/data/naming/data
     private String cacheDir = UtilsAndCommons.DATA_BASE_DIR + File.separator + "data";
 
     public synchronized void loadDatums(RaftCore.Notifier notifier, ConcurrentMap<String, Datum> datums) throws Exception {
 
         Datum datum;
         long start = System.currentTimeMillis();
-        for (File cache : listCaches()) {
+        for (File cache : listCaches()) {//cache file or directory
             if (cache.isDirectory() && cache.listFiles() != null) {
                 for (File datumFile : cache.listFiles()) {
                     datum = readDatum(datumFile, cache.getName());
                     if (datum != null) {
+                        //load datums
                         datums.put(datum.key, datum);
+                        //notifier 线程添加 change 类型任务
                         notifier.addTask(datum.key, ApplyAction.CHANGE);
                     }
                 }
                 continue;
             }
+            //file
             datum = readDatum(cache, StringUtils.EMPTY);
             if (datum != null) {
                 datums.put(datum.key, datum);
@@ -201,7 +205,7 @@ public class RaftStore {
         }
     }
 
-    public synchronized void write(final Datum datum) throws Exception {
+    public synchronized void write(final Datum datum) throws Exception {//写 cache file
 
         String namespaceId = KeyBuilder.getNamespace(datum.key);
 

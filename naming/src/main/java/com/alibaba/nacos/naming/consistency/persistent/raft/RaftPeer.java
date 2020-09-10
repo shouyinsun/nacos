@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author nacos
  */
+//server节点信息
 public class RaftPeer {
 
     public String ip;
@@ -33,17 +34,21 @@ public class RaftPeer {
 
     public AtomicLong term = new AtomicLong(0L);
 
+    //初始 0 ~ 15s 选举timeout
     public volatile long leaderDueMs = RandomUtils.nextLong(0, GlobalExecutor.LEADER_TIMEOUT_MS);
-
+    //初始 0 ~ 5s  心跳timeout
     public volatile long heartbeatDueMs = RandomUtils.nextLong(0, GlobalExecutor.HEARTBEAT_INTERVAL_MS);
 
     public State state = State.FOLLOWER;
 
     public void resetLeaderDue() {
+        //15s + random(5)
+        //加随机时间,错开,避免同时成为candidate,进行选举
         leaderDueMs = GlobalExecutor.LEADER_TIMEOUT_MS + RandomUtils.nextLong(0, GlobalExecutor.RANDOM_MS);
     }
 
     public void resetHeartbeatDue() {
+        //5s
         heartbeatDueMs = GlobalExecutor.HEARTBEAT_INTERVAL_MS;
     }
 

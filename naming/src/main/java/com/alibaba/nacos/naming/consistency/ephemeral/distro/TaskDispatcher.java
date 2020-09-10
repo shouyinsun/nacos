@@ -113,14 +113,18 @@ public class TaskDispatcher {
                     keys.add(key);
                     dataSize++;
 
+                    //批量同步count
                     if (dataSize == partitionConfig.getBatchSyncKeyCount() ||
                         (System.currentTimeMillis() - lastDispatchTime) > partitionConfig.getTaskDispatchPeriod()) {
 
                         for (Server member : dataSyncer.getServers()) {
+                            //除去自己的每个server都要同步
                             if (NetUtils.localServer().equals(member.getKey())) {
                                 continue;
                             }
+                            //同步task
                             SyncTask syncTask = new SyncTask();
+                            //keys,批量
                             syncTask.setKeys(keys);
                             syncTask.setTargetServer(member.getKey());
 

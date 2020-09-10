@@ -117,6 +117,7 @@ public class UtilsAndCommons {
 
     public static final String UPDATE_INSTANCE_ACTION_REMOVE = "remove";
 
+    //date目录 NACOS_HOME/data/naming
     public static final String DATA_BASE_DIR = NACOS_HOME + File.separator + "data" + File.separator + "naming";
 
     public static final String NUMBER_PATTERN = "^\\d+$";

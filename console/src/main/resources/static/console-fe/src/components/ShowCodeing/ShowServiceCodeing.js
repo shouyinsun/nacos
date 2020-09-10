@@ -158,7 +158,7 @@ import com.alibaba.nacos.spring.context.annotation.discovery.EnableNacosDiscover
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableNacosDiscovery(globalProperties = @NacosProperties(serverAddr = "127.0.0.1:8848"))
+@EnableNacosDiscovery(globalProperties = @NacosProperties(serverAddr = "127.0.0.1:8905"))
 public class NacosConfiguration {
 
 }
@@ -205,7 +205,7 @@ public class DiscoveryController {
 */
 /* Refer to document:  https://github.com/nacos-group/nacos-examples/blob/master/nacos-spring-boot-example/nacos-spring-boot-discovery-example/src/main/resources
 * application.properties
-   nacos.discovery.server-addr=127.0.0.1:8848
+   nacos.discovery.server-addr=127.0.0.1:8905
 */    
 // Refer to document: https://github.com/nacos-group/nacos-examples/blob/master/nacos-spring-boot-example/nacos-spring-boot-discovery-example/src/main/java/com/alibaba/nacos/example/spring/boot/controller
 
@@ -255,7 +255,7 @@ public class DiscoveryController {
 * application.properties
 server.port=18080
 spring.application.name=${this.record.name}
-spring.cloud.nacos.discovery.server-addr=127.0.0.1:8848
+spring.cloud.nacos.discovery.server-addr=127.0.0.1:8905
 */    
 
 // Refer to document: https://github.com/nacos-group/nacos-examples/tree/master/nacos-spring-cloud-example/nacos-spring-cloud-discovery-example/nacos-spring-cloud-provider-example/src/main/java/com/alibaba/nacos/example/spring/cloud
@@ -294,7 +294,7 @@ public class NacosProviderApplication {
 /* Refer to document: https://github.com/nacos-group/nacos-examples/tree/master/nacos-spring-cloud-example/nacos-spring-cloud-discovery-example/nacos-spring-cloud-consumer-example/src/main/resources
 * application.properties
 spring.application.name=micro-service-oauth2
-spring.cloud.nacos.discovery.server-addr=127.0.0.1:8848
+spring.cloud.nacos.discovery.server-addr=127.0.0.1:8905
 */    
 
 // Refer to document: https://github.com/nacos-group/nacos-examples/tree/master/nacos-spring-cloud-example/nacos-spring-cloud-discovery-example/nacos-spring-cloud-consumer-example/src/main/java/com/alibaba/nacos/example/spring/cloud

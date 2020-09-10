@@ -28,6 +28,7 @@ import java.util.Map;
 /**
  * @author nacos
  */
+//service 状态同步器
 public class ServiceStatusSynchronizer implements Synchronizer {
     @Override
     public void send(final String serverIP, Message msg) {

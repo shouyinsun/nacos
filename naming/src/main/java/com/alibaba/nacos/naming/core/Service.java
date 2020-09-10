@@ -104,6 +104,8 @@ public class Service extends com.alibaba.nacos.api.naming.pojo.Service implement
         ClientBeatProcessor clientBeatProcessor = new ClientBeatProcessor();
         clientBeatProcessor.setService(this);
         clientBeatProcessor.setRsInfo(rsInfo);
+        //health check 线程池
+        // right now
         HealthCheckReactor.scheduleNow(clientBeatProcessor);
     }
 
@@ -460,6 +462,7 @@ public class Service extends com.alibaba.nacos.api.naming.pojo.Service implement
             ipsString.append(",");
         }
 
+        //service checksum ips md5值
         try {
             String result;
             try {

@@ -71,6 +71,7 @@ public class SwitchDomain implements Record, Cloneable {
     /**
      * The server is regarded as expired if its two reporting interval is lagger than this variable.
      */
+    //server间上报status信息,超时视为过期,非存活
     private long distroServerExpiredMillis = TimeUnit.SECONDS.toMillis(10);
 
     /**
